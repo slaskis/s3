@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"mime"
 	"net/url"
 	"os"
 	"os/signal"
@@ -23,8 +24,8 @@ type Options struct {
 
 func main() {
 	opts := Options{}
-	flag.StringVar(&opts.ACL, "acl", "", "set acl")
-	flag.BoolVar(&opts.Verbose, "v", false, "verbose")
+	flag.StringVar(&opts.ACL, "acl", "private", "set acl")
+	flag.BoolVar(&opts.Verbose, "verbose", false, "verbose")
 	flag.Parse()
 
 	cfg, err := external.LoadDefaultAWSConfig()
@@ -69,7 +70,13 @@ func main() {
 		}
 
 		return filepath.Walk(src, func(path string, info os.FileInfo, _ error) error {
-			if info == nil || info.IsDir() {
+			if info == nil {
+				return nil
+			} else if info.IsDir() {
+				if info.Name() == ".git" {
+					fmt.Fprintln(os.Stderr, "skipping .git directory")
+					return filepath.SkipDir
+				}
 				return nil
 			}
 
@@ -82,14 +89,15 @@ func main() {
 			key := strings.TrimPrefix(strings.TrimSuffix(dst.Path, "/")+strings.TrimPrefix(path, src), "/")
 
 			if opts.Verbose {
-				fmt.Printf("copying %s => %s\n", path, key)
+				fmt.Printf("copying %s => %s (%s)\n", path, key, opts.ACL)
 			}
 
 			_, err = uploader.UploadWithContext(ctx, &s3manager.UploadInput{
-				ACL:    s3.ObjectCannedACL(opts.ACL),
-				Bucket: aws.String(dst.Hostname()),
-				Key:    aws.String(key),
-				Body:   file,
+				ACL:         s3.ObjectCannedACL(opts.ACL),
+				Bucket:      aws.String(dst.Hostname()),
+				Key:         aws.String(key),
+				ContentType: aws.String(mime.TypeByExtension(filepath.Ext(path))),
+				Body:        file,
 			})
 			if err != nil {
 				return fmt.Errorf("upload: %w", err)
@@ -103,6 +111,7 @@ func main() {
 		err = cp()
 	default:
 		err = fmt.Errorf("invalid command. must be 'cp'")
+		flag.Usage()
 	}
 
 	if err != nil {
