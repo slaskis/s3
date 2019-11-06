@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 
@@ -34,8 +35,22 @@ func main() {
 
 	ctx := context.Background()
 
-	// Set the AWS Region that the service clients should use
-	// cfg.Region = endpoints
+	// trap Ctrl+C and call cancel on the context
+	ctx, cancel := context.WithCancel(ctx)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	defer func() {
+		signal.Stop(c)
+		cancel()
+	}()
+	go func() {
+		select {
+		case <-c:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
 	uploader := s3manager.NewUploader(cfg)
 
 	cp := func() error {
