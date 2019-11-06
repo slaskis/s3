@@ -25,7 +25,7 @@ jobs:
       - run: |
           curl -L https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar -xJf -
           upx-3.95-amd64_linux/upx bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}
-
+      - run: tar -cJ bin/s3-${{ matrix.goos }}-${{ matrix.goarch }} > bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}.tar.xz
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
@@ -36,3 +36,14 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: bin/s3-${{ matrix.goos }}-${{ matrix.goarch }} > bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}.tar.xz
+          asset_name: s3-${{ matrix.goos }}-${{ matrix.goarch }} > bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}.tar.xz
+          asset_content_type: application/x-xz
