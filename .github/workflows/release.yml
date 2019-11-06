@@ -46,7 +46,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-      - run: echo ${{ steps.create_release.outputs.upload_url }} > upload_url.txt
+      - run: echo '${{ steps.create_release.outputs.upload_url }}' > upload_url.txt
       - name: Store Upload URL
         uses: actions/upload-artifact@v1
         with:
