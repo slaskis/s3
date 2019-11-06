@@ -54,7 +54,7 @@ func main() {
 	uploader := s3manager.NewUploader(cfg)
 
 	cp := func() error {
-		src, err := filepath.Abs(flag.Arg(1))
+		src, err := filepath.Abs(strings.TrimPrefix(flag.Arg(1), "file://"))
 		if err != nil {
 			return fmt.Errorf("parse source: %w", err)
 		}
@@ -79,7 +79,7 @@ func main() {
 			}
 			defer file.Close()
 
-			key := strings.TrimSuffix(dst.Path, "/") + strings.TrimPrefix(path, src)
+			key := strings.TrimPrefix(strings.TrimSuffix(dst.Path, "/")+strings.TrimPrefix(path, src), "/")
 
 			if opts.Verbose {
 				fmt.Printf("copying %s => %s\n", path, key)
