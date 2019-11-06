@@ -12,8 +12,8 @@ jobs:
     strategy:
       matrix:
         go: [1.13]
-        goos: [linux]
-        goarch: [amd64]
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64, 386]
     steps:
       - name: Checkout code
         uses: actions/checkout@master
