@@ -23,8 +23,7 @@ jobs:
           go-version: ${{ matrix.go }}
       - run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o bin/s3-${{ matrix.goos }}-${{ matrix.goarch }} .
       - run: |
-          curl -Lo upx-3.95-amd64_linux.tar.xz https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz
-          tar -xJf upx-3.95-amd64_linux.tar.xz
+          curl -L https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar -xJf -
           upx-3.95-amd64_linux/upx bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Create Release
