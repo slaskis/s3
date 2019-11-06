@@ -1,0 +1,40 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Create Release
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [1.13]
+        goos: [linux, darwin, windows]
+        goarch: [386, amd64, arm, arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Set up Go ${{ matrix.go }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+      - run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o bin/s3-${{ matrix.goos }}-${{ matrix.goarch }} .
+      - run: |
+        curl -Lo upx-3.95-amd64_linux.tar.xz https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz
+        tar -xJf upx-3.95-amd64_linux.tar.xz
+        upx-3.95-amd64_linux/upx bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
