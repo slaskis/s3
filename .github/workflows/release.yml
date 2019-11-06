@@ -13,8 +13,7 @@ jobs:
       matrix:
         go: [1.13]
         goos: [linux, windows, darwin]
-        goarch: [amd64, arm64, 386]
-    if: matrix.goos != 'windows' && matrix.goarch != 'arm64'
+        goarch: [amd64, 386]
     steps:
       - name: Checkout code
         uses: actions/checkout@master
