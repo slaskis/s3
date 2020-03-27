@@ -22,9 +22,6 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o bin/s3-${{ matrix.goos }}-${{ matrix.goarch }} .
-      - run: |
-          curl -L https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar -xJf -
-          upx-3.95-amd64_linux/upx bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}
       - run: tar -cJ bin/s3-${{ matrix.goos }}-${{ matrix.goarch }} > bin/s3-${{ matrix.goos }}-${{ matrix.goarch }}.tar.xz
       - name: Upload
         uses: actions/upload-artifact@v1
